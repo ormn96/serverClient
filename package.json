@@ -1,23 +1,25 @@
 {
-  "name": "sc",
+  "name": "serverclient",
   "version": "1.0.0",
-  "description": "",
-  "main": "mtTest.js",
+  "description": "https://server-client-gody.herokuapp.com/",
+  "main": "myTest.js",
+  "dependencies": {
+    "express": "^4.17.1",
+    "pg": "^8.5.1"
+  },
+  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
-    ,"start": "node myTest.js"
+	,"start": "node myTest.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ormn96/sc.git"
+    "url": "git+https://github.com/ormn96/serverClient.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ormn96/sc/issues"
+    "url": "https://github.com/ormn96/serverClient/issues"
   },
-  "homepage": "https://github.com/ormn96/sc#readme",
-  "dependencies": {
-    "express": "^4.17.1"
-  }
+  "homepage": "https://github.com/ormn96/serverClient#readme"
 }
