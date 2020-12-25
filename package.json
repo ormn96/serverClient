@@ -1,0 +1,23 @@
+{
+  "name": "sc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "mtTest.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+    ,"start": "node myTest.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ormn96/sc.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ormn96/sc/issues"
+  },
+  "homepage": "https://github.com/ormn96/sc#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
