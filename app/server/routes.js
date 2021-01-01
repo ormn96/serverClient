@@ -1,10 +1,10 @@
 
-var CT = require('./modules/country-list');
-var AM = require('./modules/account-manager');
-var EM = require('./modules/email-dispatcher');
+//var CT = require('./modules/country-list');
+//var AM = require('./modules/account-manager');
+//var EM = require('./modules/email-dispatcher');
 
 module.exports = function(app) {
-
+	var path = require('path');
 /*
 	login & logout
 */
@@ -12,7 +12,10 @@ module.exports = function(app) {
 	app.get('/', function(req, res){
 	// check if the user has an auto login key saved in a cookie //
 		if (req.cookies.login == undefined){
-			res.render('login', { title: 'Hello - Please Login To Your Account' });
+			console.log(__dirname)
+			console.log(path.join(__dirname,'/../../client/login.html'))
+			res.sendFile(path.join(__dirname,'/../../client/login.html'));
+			//res.render('login', { title: 'Hello - Please Login To Your Account' });
 		}	else{
 	// attempt automatic login //
 			AM.validateLoginKey(req.cookies.login, req.ip, function(e, o){

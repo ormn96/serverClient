@@ -10,7 +10,8 @@ var express = require('express');
 var session = require('express-session');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
-var MongoStore = require('connect-mongo')(session);
+var path = require('path');
+//var MongoStore = require('connect-mongo')(session);
 
 var app = express();
 
@@ -42,7 +43,7 @@ app.use(session({
 	proxy: true,
 	resave: true,
 	saveUninitialized: true,
-	store: new MongoStore({ url: process.env.DB_URL })
+	//store: new MongoStore({ url: process.env.DB_URL })
 	})
 );
 
