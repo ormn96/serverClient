@@ -34,13 +34,7 @@ client.connect().catch((err)=>{
   console.log(err)
 })
 
-client.query('select * from public.links', (err, res)=>{
-  if (err) throw err;
-  for (let row of res.rows) {
-    //console.log(JSON.stringify(row));
-    console.log(row.name);
-  }
-})
+
 
 
 app.get('/', (req, res) => {
@@ -50,6 +44,13 @@ app.get('/', (req, res) => {
 app.get('/set', (req, res) => {
   client.query("INSERT INTO public.links VALUES(3,'sadsda','asdasa',null,null)", (err, res2)=>{
     console.log(err ,res2)
+  })
+  client.query('select * from public.links', (err, res)=>{
+    if (err) throw err;
+    for (let row of res.rows) {
+      //console.log(JSON.stringify(row));
+      console.log(row.name);
+    }
   })
   res.sendFile(__dirname + '/mainPage.html');
 });
