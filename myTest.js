@@ -42,7 +42,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/set', (req, res) => {
-  client.query("INSERT INTO public.links VALUES(3,'sadsda','asdasa',null,null)", (err, res2)=>{
+  client.query("INSERT INTO public.links VALUES(3,'sadsda','asdasa',null,null) ON CONFLICT DO NOTHING", (err, res2)=>{
     console.log(err ,res2)
   })
   client.query('select * from public.links', (err, res)=>{
