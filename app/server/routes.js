@@ -1,7 +1,7 @@
 
-//var CT = require('./modules/country-list');
-//var AM = require('./modules/account-manager');
-//var EM = require('./modules/email-dispatcher');
+// var CT = require('./modules/country-list');
+// var AM = require('./modules/account-manager');
+// var EM = require('./modules/email-dispatcher');
 
 module.exports = function(app) {
 	var path = require('path');
@@ -12,8 +12,6 @@ module.exports = function(app) {
 	app.get('/', function(req, res){
 	// check if the user has an auto login key saved in a cookie //
 		if (req.cookies.login == undefined){
-			console.log(__dirname)
-			console.log(path.join(__dirname,'/../../client/login.html'))
 			res.sendFile(path.join(__dirname,'/../../client/login.html'));
 			//res.render('login', { title: 'Hello - Please Login To Your Account' });
 		}	else{
@@ -25,7 +23,7 @@ module.exports = function(app) {
 						res.redirect('/home');
 					});
 				}	else{
-					res.render('login', { title: 'Hello - Please Login To Your Account' });
+					res.sendFile(path.join(__dirname,'/../../client/login.html'));
 				}
 			});
 		}
@@ -62,11 +60,12 @@ module.exports = function(app) {
 		if (req.session.user == null){
 			res.redirect('/');
 		}	else{
-			res.render('home', {
-				title : 'Control Panel',
-				countries : CT,
-				udata : req.session.user
-			});
+			res.sendFile(path.join(__dirname,'/../../client/charts.html'));
+			// res.render('home', {
+			// 	title : 'Control Panel',
+			// 	countries : CT,
+			// 	udata : req.session.user
+			// });
 		}
 	});
 	
@@ -96,7 +95,8 @@ module.exports = function(app) {
 */
 
 	app.get('/signup', function(req, res) {
-		res.render('signup', {  title: 'Signup', countries : CT });
+		// res.render('signup', {  title: 'Signup', countries : CT });
+		res.sendFile(path.join(__dirname,'/../../client/register.html'));
 	});
 	
 	app.post('/signup', function(req, res){
@@ -144,7 +144,8 @@ module.exports = function(app) {
 				res.redirect('/');
 			} else{
 				req.session.passKey = req.query['key'];
-				res.render('reset', { title : 'Reset Password' });
+				res.sendFile(path.join(__dirname,'/../../client/forgot-password.html'));
+				// res.render('reset', { title : 'Reset Password' });
 			}
 		})
 	});
@@ -167,11 +168,11 @@ module.exports = function(app) {
 	view, delete & reset accounts
 */
 	
-	app.get('/print', function(req, res) {
-		AM.getAllRecords( function(e, accounts){
-			res.render('print', { title : 'Account List', accts : accounts });
-		})
-	});
+	// app.get('/print', function(req, res) {
+	// 	AM.getAllRecords( function(e, accounts){
+	// 		res.render('print', { title : 'Account List', accts : accounts });
+	// 	})
+	// });
 	
 	app.post('/delete', function(req, res){
 		AM.deleteAccount(req.session.user._id, function(e, obj){
@@ -184,11 +185,11 @@ module.exports = function(app) {
 		});
 	});
 	
-	app.get('/reset', function(req, res) {
-		AM.deleteAllAccounts(function(){
-			res.redirect('/print');
-		});
-	});
+	// app.get('/reset', function(req, res) {
+	// 	AM.deleteAllAccounts(function(){
+	// 		res.redirect('/print');
+	// 	});
+	// });
 	
 	app.get('*', function(req, res) { res.render('404', { title: 'Page Not Found'}); });
 

@@ -12,7 +12,8 @@
     "moment": "^2.29.1",
     "pg": "^8.5.1",
     "pug": "^3.0.0",
-    "stylus": "^0.54.8"
+    "stylus": "^0.54.8",
+    "url-crypt": "^1.2.1"
   },
   "devDependencies": {},
   "scripts": {
