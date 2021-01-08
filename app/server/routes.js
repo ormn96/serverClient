@@ -98,6 +98,10 @@ module.exports = function(app) {
 		// res.render('signup', {  title: 'Signup', countries : CT });
 		res.sendFile(path.join(__dirname,'/../../client/register.html'));
 	});
+
+	app.get('/css/sb-admin-2.min.css', function(req, res) {
+		res.sendFile(path.join(__dirname,'/../../client/css/sb-admin-2.min.css'));
+	});
 	
 	app.post('/signup', function(req, res){
 		AM.addNewAccount({
