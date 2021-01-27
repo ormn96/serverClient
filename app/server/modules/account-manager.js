@@ -2,7 +2,7 @@
 const crypto 		= require('crypto');
 const moment 		= require('moment');
 const MongoClient 	= require('mongodb').MongoClient;
-var PM = require('./modules/promo-manager');
+var PM = require('./promo-manager');
 
 var db, accounts;
 console.log(process.env.DB_URL)
