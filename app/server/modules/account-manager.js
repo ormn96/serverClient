@@ -3,7 +3,7 @@ const crypto 		= require('crypto');
 const moment 		= require('moment');
 const MongoClient 	= require('mongodb').MongoClient;
 var PM = require('./promo-manager');
-
+var EM = require('./email-dispatcher').EM;
 var db, accounts;
 console.log(process.env.DB_URL)
 // MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true }, function(e, client) {
@@ -37,7 +37,16 @@ const guid = function(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[
 /*
 	login validation methods
 */
-
+exports.checkMail = function(email,  callback)
+{
+	accounts.findOne({email:email}, function(e, o) {
+		if (o){
+			callback(false)
+		}	else{
+			callback(true);
+		}
+	});
+}
 exports.autoLogin = function(email, pass, callback)
 {
 	accounts.findOne({email:email}, function(e, o) {
@@ -111,28 +120,36 @@ exports.validatePasswordKey = function(passKey, ipAddress, callback)
 exports.addNewAccount = function(newData, callback)
 {
 	accounts.findOne({email:newData.email}, function(e, o) {
+		var found = true
 		if (o){
 			callback('email-taken');
 		}	else{
-			if(newData.promo != ''){
+			if(newData.promo && newData.promo != ''){
 				PM.getPromo(newData.promo,function (e,o) {
 					if (e!=null){
 						callback('promo-code-not-exists')
-						return
+						found = false
 					}
 				})
 			}
-			//TODO add promo check
-			saltAndHash(newData.pass, function(hash){
-				newData.pass = hash;
-			// append date stamp when record was created //
-				newData.date = moment().format('MMMM Do YYYY, h:mm:ss a');
-				accounts.insertOne(newData, callback);
-			});
+			if(found){
+				saltAndHash(newData.pass, function(hash){
+					newData.pass = hash;
+				// append date stamp when record was created //
+					newData.date = moment().format('MMMM Do YYYY, h:mm:ss a');
+					accounts.insertOne(newData, callback);
+				});
+			}			
 		}
 	});
 }
-
+exports.updateMail = function(newData, callback)
+{
+	var o = {
+		email : data.email
+	}
+	accounts.findOneAndUpdate({_id:getObjectId(data.id)}, {$set:o}, {returnOriginal : false}, callback);
+}
 exports.updateAccount = function(newData, callback)
 {
 	let findOneAndUpdate = function(data){
@@ -159,14 +176,34 @@ exports.updateAccount = function(newData, callback)
 			}
 		})
 	}
-	if (newData.pass == ''){
-		findOneAndUpdate(newData);
-	}	else { 
-		saltAndHash(newData.pass, function(hash){
-			newData.pass = hash;
-			findOneAndUpdate(newData);
-		});
-	}
+	findOneAndUpdate(newData);
+}
+
+exports.updatePasswordRequest = function(id, oldPass, newPass, callback)
+{
+	accounts.findOne({_id:getObjectId(id)},function(e,res){
+		if(res){
+			validatePassword(oldPass,res.pass,function(e,result){
+				if(result){
+					saltAndHash(newPass, function(hash){
+						newData.pass = hash;
+						var o = {
+							pass: newPass
+						}
+						accounts.findOneAndUpdate({_id:getObjectId(data.id)}, {$set:o}, {returnOriginal : false}, callback);
+					});
+				}else{
+					callback('password-not-match')
+				}
+			})
+			
+		}else{
+			callback('error-getting-pass')
+		}
+		
+	})
+	
+	
 }
 
 exports.updatePassword = function(passKey, newPass, callback)

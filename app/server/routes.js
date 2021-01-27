@@ -1,7 +1,8 @@
 
  var PM = require('./modules/promo-manager');
  var AM = require('./modules/account-manager');
-// var EM = require('./modules/email-dispatcher');
+ var EM = require('./modules/email-dispatcher').EM;
+ var urlCrypt = require('url-crypt')('~{ry*I)44==yU/]9<7DPk!Hj"R#:-/Z7(hTBnlRS=4CXF');
 
 module.exports = function(app) {
 	var path = require('path');
@@ -84,7 +85,6 @@ module.exports = function(app) {
 				city	: req.body['city'],
 				street	: req.body['street'],
 				zipCode : req.body['zipCode'],
-				pass	: req.body['pass']
 			}, function(e, o){
 				if (e){
 					//res.status(400).send('error-updating-account');
@@ -94,7 +94,56 @@ module.exports = function(app) {
 					res.status(200).send('ok');
 				}
 			});
+			if(req.body['email']){
+				var data = {
+					id		: req.session.user._id,
+					name	: req.body['name'],
+					lastName: req.body['lastName'],
+					email	: req.body['email']
+				}
+				var base64 = urlCrypt.cryptObj(data);
+				EM.composeEmailMailVerification(data,'/verifyMail/'+base64)
+			}
 		}
+	});
+
+	app.post('/changePassword', function(req, res){
+		if (req.session.user == null){
+			res.redirect('/');
+		}	else{
+			AM.updatePasswordRequest( req.session.user._id,
+				req.body['oldPass'],
+				 req.body['pass']
+			, function(e, o){
+				if (e){
+					//res.status(400).send('error-updating-account');
+					res.status(400).send(e);
+				}	else{
+					res.status(200).send('ok');
+				}
+			});
+		}
+	});
+
+	app.get('/verifyMail/:base64', function(req, res){
+		var data;
+
+		try {
+			data =  urlCrypt.decryptObj(req.params.base64);
+		} catch(e) {
+			// The link was mangled or tampered with.  
+			return res.status(400).send('Bad request.  Please check the link.');
+		}
+		AM.updateMail(data
+			, function(e){
+			if (e){
+				console.log(e)
+				res.status(400).send(e);
+			}	else{
+				res.status(200).send('ok');
+				
+			}
+		});
 	});
 
 /*
@@ -111,17 +160,44 @@ module.exports = function(app) {
 	});
 	
 	app.post('/signup', function(req, res){
-		AM.addNewAccount({
+		var data = {
 			name 	: req.body['name'],
 			lastName: req.body['lastName'],
 			email 	: req.body['email'],
 			pass	: req.body['pass'],
 			promo : req.body['promo']
-		}, function(e){
+		}
+		AM.checkMail(data.email,function(state){
+			if(state){
+				var base64 = urlCrypt.cryptObj(data);
+				EM.dispatchResistrationLink(data,'/addAccount/'+base64)
+				res.status(200).send('ok');
+			}else{
+				res.status(400).send('email-taken');
+			}
+		})
+		
+	});
+
+	app.get('/addAccount/:base64', function(req, res){
+		var data;
+
+		try {
+			data =  urlCrypt.decryptObj(req.params.base64);
+		} catch(e) {
+			// The link was mangled or tampered with.  
+			return res.status(400).send('Bad request.  Please check the link.');
+		}
+		AM.addNewAccount(data
+			, function(e){
 			if (e){
+				console.log(e)
 				res.status(400).send(e);
 			}	else{
-				res.status(200).send('ok');
+				console.log("success\n"+data)
+				//TODO add sucess message
+				res.sendFile(path.join(__dirname,'/../../client/login.html'));
+				
 			}
 		});
 	});
