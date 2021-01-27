@@ -11,6 +11,7 @@
     "express-session": "^1.17.1",
     "moment": "^2.29.1",
     "mongodb": "^3.6.3",
+    "nodemailer": "^6.4.17",
     "pg": "^8.5.1",
     "pug": "^3.0.0",
     "stylus": "^0.54.8",
