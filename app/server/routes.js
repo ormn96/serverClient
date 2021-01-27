@@ -1,6 +1,6 @@
 
-// var CT = require('./modules/country-list');
-// var AM = require('./modules/account-manager');
+ var PM = require('./modules/promo-manager');
+ var AM = require('./modules/account-manager');
 // var EM = require('./modules/email-dispatcher');
 
 module.exports = function(app) {
@@ -18,7 +18,7 @@ module.exports = function(app) {
 	// attempt automatic login //
 			AM.validateLoginKey(req.cookies.login, req.ip, function(e, o){
 				if (o){
-					AM.autoLogin(o.user, o.pass, function(o){
+					AM.autoLogin(o.email, o.pass, function(o){
 						req.session.user = o;
 						res.redirect('/home');
 					});
@@ -30,7 +30,7 @@ module.exports = function(app) {
 	});
 	
 	app.post('/', function(req, res){
-		AM.manualLogin(req.body['user'], req.body['pass'], function(e, o){
+		AM.manualLogin(req.body['email'], req.body['pass'], function(e, o){
 			if (!o){
 				res.status(400).send(e);
 			}	else{
@@ -76,12 +76,19 @@ module.exports = function(app) {
 			AM.updateAccount({
 				id		: req.session.user._id,
 				name	: req.body['name'],
+				lastName: req.body['lastName'],
 				email	: req.body['email'],
-				pass	: req.body['pass'],
-				country	: req.body['country']
+				promo	: req.body['promo'],
+				phone	: req.body['phone'],
+				country	: req.body['country'],
+				city	: req.body['city'],
+				street	: req.body['street'],
+				zipCode : req.body['zipCode'],
+				pass	: req.body['pass']
 			}, function(e, o){
 				if (e){
-					res.status(400).send('error-updating-account');
+					//res.status(400).send('error-updating-account');
+					res.status(400).send(e);
 				}	else{
 					req.session.user = o.value;
 					res.status(200).send('ok');
@@ -106,10 +113,10 @@ module.exports = function(app) {
 	app.post('/signup', function(req, res){
 		AM.addNewAccount({
 			name 	: req.body['name'],
+			lastName: req.body['lastName'],
 			email 	: req.body['email'],
-			user 	: req.body['user'],
 			pass	: req.body['pass'],
-			country : req.body['country']
+			promo : req.body['promo']
 		}, function(e){
 			if (e){
 				res.status(400).send(e);
@@ -166,6 +173,29 @@ module.exports = function(app) {
 				res.status(400).send('unable to update password');
 			}
 		})
+	});
+
+	app.get('/getPromo', function(req, res) {
+		PM.getPromo(req.query['code'],function (e,o) {
+			if( e || o==null){
+				res.status(400).send('promo-not-found');
+			}else{
+				res.status(200).send(o);
+			}
+		})
+	});
+
+	app.post('/addPromo', function(req, res) {
+		PM.addPromo({
+			promoCode: req.body['promoCode'],
+			desc: req.body['desc']
+		}, function(e){
+			if (e){
+				res.status(400).send(e);
+			}	else{
+				res.status(200).send('ok');
+			}
+		});
 	});
 	
 /*
