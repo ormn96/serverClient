@@ -2,7 +2,6 @@
 const MongoClient 	= require('mongodb').MongoClient;
 
 var db, promos;
-console.log(process.env.DB_URL)
 // MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true }, function(e, client) {
 // 	if (e){
 // 		console.log(e);

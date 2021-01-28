@@ -5,7 +5,7 @@ const MongoClient 	= require('mongodb').MongoClient;
 var PM = require('./promo-manager');
 var EM = require('./email-dispatcher').EM;
 var db, accounts;
-console.log(process.env.DB_URL)
+
 // MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true }, function(e, client) {
 // 	if (e){
 // 		console.log(e);
@@ -26,8 +26,7 @@ client.connect(err => {
 			}	else{
 				db = client.db(process.env.DB_NAME);
 				accounts = db.collection('accounts');
-			// index fields 'user' & 'email' for faster new account validation //
-				accounts.createIndex({user: 1, email: 1});
+				accounts.createIndex({email: 1});
 				console.log('mongo :: connected to database :: "'+process.env.DB_NAME+'"');
 			}
 		});
