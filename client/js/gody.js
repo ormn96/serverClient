@@ -16,3 +16,27 @@ success: function(data, status, xhr) {
 });
 return false
 }
+
+function CheckEmail(email) {
+    var mailformat = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/;
+    if (!email.match(mailformat)) {
+      return false;
+    }
+    return true;
+  }
+
+  function CheckName(name) {
+    var format = /^([a-zA-Z]{1,})/;
+    if (!name.match(format)) {
+      return false;
+    }
+    return true;
+  }
+
+  function CheckPass(pass) {
+    var format = /(?=.*[0-9])(.{6,})/;
+    if (!pass.match(format)) {
+      return false;
+    }
+    return true;
+  }
