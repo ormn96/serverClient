@@ -11,7 +11,7 @@ success: function(data, status, xhr) {
     $(location).attr('href', 'http://localhost:3000/dashboard.html')
         },
  error: function(xhr, status, errorMsg) {
-    alert('status: ' + status + ', msg:' + errorMsg);
+    setModal("Login","error: "+errorMsg,"")
         }
 });
 return false
@@ -38,11 +38,11 @@ function ResetPass(){
     var pass = $('input')[0].form.Password.value
     var rep = $('input')[0].form.Repeat.value
     if(!CheckPass(pass)){
-        alert('password must be 6 symbols long and contain at least 1 number');
+        setModal("Reset Password",'password must be 6 symbols long and contain at least 1 number',"")
         return false
     }
     if(pass!=rep){
-        alert('password must match the Repeat Password');
+        setModal("Reset Password",'password must match the Repeat Password',"")
         return false
     }
     $.ajax('/reset-password', {
@@ -52,11 +52,10 @@ function ResetPass(){
         },
         
 success: function(data, status, xhr) {
-    alert('password changed successfully');
-    $(location).attr('href', 'http://localhost:3000/')
+    setModal("Reset Password",'password changed successfully','http://localhost:3000/')
         },
  error: function(xhr, status, errorMsg) {
-    alert('status: ' + status + ', msg:' + errorMsg);
+    setModal("Reset Password","error: "+errorMsg,"")
         }
 });
 return false 
