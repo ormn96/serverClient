@@ -1,4 +1,8 @@
 function login(){
+    if(!CheckEmail($('input')[0].form.Email.value)){
+        setModal("Login",'Please enter valid Email',"")
+        return false
+    }
     $.ajax('/', {
         type: 'POST',
         data: {
