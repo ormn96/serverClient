@@ -102,7 +102,7 @@ module.exports = function(app) {
 					email	: req.body['email']
 				}
 				var base64 = urlCrypt.cryptObj(data);
-				EM.composeEmailMailVerification(data,'/verifyMail/'+base64)
+				EM.dispatchMailVerificationMail(data,'/verifyMail/'+base64)
 			}
 		}
 	});

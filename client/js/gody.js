@@ -12,7 +12,7 @@ function login(){
         },
         
 success: function(data, status, xhr) {
-    $(location).attr('href', 'http://localhost:3000/dashboard.html')
+    $(location).attr('href', '../dashboard.html')
         },
  error: function(xhr, status, errorMsg) {
     setModal("Login","error: "+errorMsg,"")
@@ -29,7 +29,7 @@ function ForgetPass(){
         },
         
 success: function(data, status, xhr) {
-    setModal("Forget Password","Email was sent to your mail address","http://localhost:3000")
+    setModal("Forget Password","Email was sent to your mail address","../")
         },
  error: function(xhr, status, errorMsg) {
     setModal("Forget Password","error: "+errorMsg,"")
@@ -56,7 +56,7 @@ function ResetPass(){
         },
         
 success: function(data, status, xhr) {
-    setModal("Reset Password",'password changed successfully','http://localhost:3000/')
+    setModal("Reset Password",'password changed successfully','../')
         },
  error: function(xhr, status, errorMsg) {
     setModal("Reset Password","error: "+errorMsg,"")
