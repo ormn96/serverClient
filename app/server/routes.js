@@ -167,16 +167,21 @@ module.exports = function(app) {
 			pass	: req.body['pass'],
 			promo : req.body['promo']
 		}
-		AM.checkMail(data.email,function(state){
-			if(state){
-				var base64 = urlCrypt.cryptObj(data);
-				EM.dispatchResistrationLink(data,'/addAccount/'+base64)
-				res.status(200).send('ok');
+		PM.getPromo(req.body['promo'],function (e,o) {
+			if( e || o==null){
+				res.status(400).send('promo-not-found');
 			}else{
-				res.status(400).send('email-taken');
+				AM.checkMail(data.email,function(state){
+					if(state){
+						var base64 = urlCrypt.cryptObj(data);
+						EM.dispatchResistrationLink(data,'/addAccount/'+base64)
+						res.status(200).send('ok');
+					}else{
+						res.status(400).send('email-taken');
+					}
+				})
 			}
 		})
-		
 	});
 
 	app.get('/addAccount/:base64', function(req, res){
