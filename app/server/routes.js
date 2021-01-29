@@ -21,7 +21,7 @@ module.exports = function(app) {
 				if (o){
 					AM.autoLogin(o.email, o.pass, function(o){
 						req.session.user = o;
-						res.redirect('/home');
+						res.redirect('/dashboard.html');
 					});
 				}	else{
 					res.sendFile(path.join(__dirname,'/../../client/login.html'));
@@ -39,7 +39,7 @@ module.exports = function(app) {
 				if (req.body['remember-me'] == 'false'){
 					res.status(200).send(o);
 				}	else{
-					AM.generateLoginKey(o.user, req.ip, function(key){
+					AM.generateLoginKey(o.email, req.ip, function(key){
 						res.cookie('login', key, { maxAge: 900000 });
 						res.status(200).send(o);
 					});
@@ -231,7 +231,7 @@ module.exports = function(app) {
 				res.redirect('/');
 			} else{
 				req.session.passKey = req.query['key'];
-				res.sendFile(path.join(__dirname,'/../../client/forgot-password.html'));
+				res.sendFile(path.join(__dirname,'/../../client/reset-password.html'));
 				// res.render('reset', { title : 'Reset Password' });
 			}
 		})
