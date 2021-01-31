@@ -1,7 +1,8 @@
 
-// var CT = require('./modules/country-list');
-// var AM = require('./modules/account-manager');
-// var EM = require('./modules/email-dispatcher');
+ var PM = require('./modules/promo-manager');
+ var AM = require('./modules/account-manager');
+ var EM = require('./modules/email-dispatcher').EM;
+ var urlCrypt = require('url-crypt')('~{ry*I)44==yU/]9<7DPk!Hj"R#:-/Z7(hTBnlRS=4CXF');
 
 module.exports = function(app) {
 	var path = require('path');
@@ -18,9 +19,9 @@ module.exports = function(app) {
 	// attempt automatic login //
 			AM.validateLoginKey(req.cookies.login, req.ip, function(e, o){
 				if (o){
-					AM.autoLogin(o.user, o.pass, function(o){
+					AM.autoLogin(o.email, o.pass, function(o){
 						req.session.user = o;
-						res.redirect('/home');
+						res.redirect('/dashboard.html');
 					});
 				}	else{
 					res.sendFile(path.join(__dirname,'/../../client/login.html'));
@@ -30,7 +31,7 @@ module.exports = function(app) {
 	});
 	
 	app.post('/', function(req, res){
-		AM.manualLogin(req.body['user'], req.body['pass'], function(e, o){
+		AM.manualLogin(req.body['email'], req.body['pass'], function(e, o){
 			if (!o){
 				res.status(400).send(e);
 			}	else{
@@ -38,7 +39,7 @@ module.exports = function(app) {
 				if (req.body['remember-me'] == 'false'){
 					res.status(200).send(o);
 				}	else{
-					AM.generateLoginKey(o.user, req.ip, function(key){
+					AM.generateLoginKey(o.email, req.ip, function(key){
 						res.cookie('login', key, { maxAge: 900000 });
 						res.status(200).send(o);
 					});
@@ -76,18 +77,73 @@ module.exports = function(app) {
 			AM.updateAccount({
 				id		: req.session.user._id,
 				name	: req.body['name'],
+				lastName: req.body['lastName'],
 				email	: req.body['email'],
-				pass	: req.body['pass'],
-				country	: req.body['country']
+				promo	: req.body['promo'],
+				phone	: req.body['phone'],
+				country	: req.body['country'],
+				city	: req.body['city'],
+				street	: req.body['street'],
+				zipCode : req.body['zipCode'],
 			}, function(e, o){
 				if (e){
-					res.status(400).send('error-updating-account');
+					//res.status(400).send('error-updating-account');
+					res.status(400).send(e);
 				}	else{
 					req.session.user = o.value;
 					res.status(200).send('ok');
 				}
 			});
+			if(req.body['email']){
+				var data = {
+					id		: req.session.user._id,
+					name	: req.body['name'],
+					lastName: req.body['lastName'],
+					email	: req.body['email']
+				}
+				var base64 = urlCrypt.cryptObj(data);
+				EM.dispatchMailVerificationMail(data,'/verifyMail/'+base64)
+			}
 		}
+	});
+
+	app.post('/changePassword', function(req, res){
+		if (req.session.user == null){
+			res.redirect('/');
+		}	else{
+			AM.updatePasswordRequest( req.session.user._id,
+				req.body['oldPass'],
+				 req.body['pass']
+			, function(e, o){
+				if (e){
+					//res.status(400).send('error-updating-account');
+					res.status(400).send(e);
+				}	else{
+					res.status(200).send('ok');
+				}
+			});
+		}
+	});
+
+	app.get('/verifyMail/:base64', function(req, res){
+		var data;
+
+		try {
+			data =  urlCrypt.decryptObj(req.params.base64);
+		} catch(e) {
+			// The link was mangled or tampered with.  
+			return res.status(400).send('Bad request.  Please check the link.');
+		}
+		AM.updateMail(data
+			, function(e){
+			if (e){
+				console.log(e)
+				res.status(400).send(e);
+			}	else{
+				res.status(200).send('ok');
+				
+			}
+		});
 	});
 
 /*
@@ -104,17 +160,49 @@ module.exports = function(app) {
 	});
 	
 	app.post('/signup', function(req, res){
-		AM.addNewAccount({
+		var data = {
 			name 	: req.body['name'],
+			lastName: req.body['lastName'],
 			email 	: req.body['email'],
-			user 	: req.body['user'],
 			pass	: req.body['pass'],
-			country : req.body['country']
-		}, function(e){
+			promo : req.body['promo']
+		}
+		PM.getPromo(req.body['promo'],function (e,o) {
+			if( e || o==null){
+				res.status(400).send('promo-not-found');
+			}else{
+				AM.checkMail(data.email,function(state){
+					if(state){
+						var base64 = urlCrypt.cryptObj(data);
+						EM.dispatchResistrationLink(data,'/addAccount/'+base64)
+						res.status(200).send('ok');
+					}else{
+						res.status(400).send('email-taken');
+					}
+				})
+			}
+		})
+	});
+
+	app.get('/addAccount/:base64', function(req, res){
+		var data;
+
+		try {
+			data =  urlCrypt.decryptObj(req.params.base64);
+		} catch(e) {
+			// The link was mangled or tampered with.  
+			return res.status(400).send('Bad request.  Please check the link.');
+		}
+		AM.addNewAccount(data
+			, function(e){
 			if (e){
+				console.log(e)
 				res.status(400).send(e);
 			}	else{
-				res.status(200).send('ok');
+				console.log("success\n"+data)
+				//TODO add sucess message
+				res.sendFile(path.join(__dirname,'/../../client/login.html'));
+				
 			}
 		});
 	});
@@ -148,7 +236,7 @@ module.exports = function(app) {
 				res.redirect('/');
 			} else{
 				req.session.passKey = req.query['key'];
-				res.sendFile(path.join(__dirname,'/../../client/forgot-password.html'));
+				res.sendFile(path.join(__dirname,'/../../client/reset-password.html'));
 				// res.render('reset', { title : 'Reset Password' });
 			}
 		})
@@ -166,6 +254,29 @@ module.exports = function(app) {
 				res.status(400).send('unable to update password');
 			}
 		})
+	});
+
+	app.get('/getPromo', function(req, res) {
+		PM.getPromo(req.query['code'],function (e,o) {
+			if( e || o==null){
+				res.status(400).send('promo-not-found');
+			}else{
+				res.status(200).send(o);
+			}
+		})
+	});
+
+	app.post('/addPromo', function(req, res) {
+		PM.addPromo({
+			promoCode: req.body['promoCode'],
+			desc: req.body['desc']
+		}, function(e){
+			if (e){
+				res.status(400).send(e);
+			}	else{
+				res.status(200).send('ok');
+			}
+		});
 	});
 	
 /*

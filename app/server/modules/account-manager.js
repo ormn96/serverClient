@@ -2,29 +2,53 @@
 const crypto 		= require('crypto');
 const moment 		= require('moment');
 const MongoClient 	= require('mongodb').MongoClient;
-
+var PM = require('./promo-manager');
+var EM = require('./email-dispatcher').EM;
 var db, accounts;
-MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true }, function(e, client) {
-	if (e){
-		console.log(e);
-	}	else{
-		db = client.db(process.env.DB_NAME);
-		accounts = db.collection('accounts');
-	// index fields 'user' & 'email' for faster new account validation //
-		accounts.createIndex({user: 1, email: 1});
-		console.log('mongo :: connected to database :: "'+process.env.DB_NAME+'"');
-	}
-});
+
+// MongoClient.connect(process.env.DB_URL, { useNewUrlParser: true, useUnifiedTopology: true }, function(e, client) {
+// 	if (e){
+// 		console.log(e);
+// 	}	else{
+// 		db = client.db(process.env.DB_NAME);
+// 		accounts = db.collection('accounts');
+// 	// index fields 'user' & 'email' for faster new account validation //
+// 		accounts.createIndex({user: 1, email: 1});
+// 		console.log('mongo :: connected to database :: "'+process.env.DB_NAME+'"');
+// 	}
+// });
+
+const uri = "mongodb+srv://admin:admin@gody.0onor.mongodb.net/test?retryWrites=true&w=majority";
+const client = new MongoClient(uri, { useNewUrlParser: true , useUnifiedTopology: true });
+client.connect(err => {
+	if (err){
+				console.log(err);
+			}	else{
+				db = client.db(process.env.DB_NAME);
+				accounts = db.collection('accounts');
+				accounts.createIndex({email: 1});
+				console.log('mongo :: connected to database :: "'+process.env.DB_NAME+'"');
+			}
+		});
 
 const guid = function(){return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {var r = Math.random()*16|0,v=c=='x'?r:r&0x3|0x8;return v.toString(16);});}
 
 /*
 	login validation methods
 */
-
-exports.autoLogin = function(user, pass, callback)
+exports.checkMail = function(email,  callback)
 {
-	accounts.findOne({user:user}, function(e, o) {
+	accounts.findOne({email:email}, function(e, o) {
+		if (o){
+			callback(false)
+		}	else{
+			callback(true);
+		}
+	});
+}
+exports.autoLogin = function(email, pass, callback)
+{
+	accounts.findOne({email:email}, function(e, o) {
 		if (o){
 			o.pass == pass ? callback(o) : callback(null);
 		}	else{
@@ -33,9 +57,9 @@ exports.autoLogin = function(user, pass, callback)
 	});
 }
 
-exports.manualLogin = function(user, pass, callback)
+exports.manualLogin = function(email, pass, callback)
 {
-	accounts.findOne({user:user}, function(e, o) {
+	accounts.findOne({email:email}, function(e, o) {
 		if (o == null){
 			callback('user-not-found');
 		}	else{
@@ -50,10 +74,10 @@ exports.manualLogin = function(user, pass, callback)
 	});
 }
 
-exports.generateLoginKey = function(user, ipAddress, callback)
+exports.generateLoginKey = function(email, ipAddress, callback)
 {
 	let cookie = guid();
-	accounts.findOneAndUpdate({user:user}, {$set:{
+	accounts.findOneAndUpdate({email:email}, {$set:{
 		ip : ipAddress,
 		cookie : cookie
 	}}, {returnOriginal : false}, function(e, o){ 
@@ -94,45 +118,91 @@ exports.validatePasswordKey = function(passKey, ipAddress, callback)
 
 exports.addNewAccount = function(newData, callback)
 {
-	accounts.findOne({user:newData.user}, function(e, o) {
+	accounts.findOne({email:newData.email}, function(e, o) {
+		var found = true
 		if (o){
-			callback('username-taken');
+			callback('email-taken');
 		}	else{
-			accounts.findOne({email:newData.email}, function(e, o) {
-				if (o){
-					callback('email-taken');
-				}	else{
-					saltAndHash(newData.pass, function(hash){
-						newData.pass = hash;
-					// append date stamp when record was created //
-						newData.date = moment().format('MMMM Do YYYY, h:mm:ss a');
-						accounts.insertOne(newData, callback);
-					});
-				}
-			});
+			if(newData.promo && newData.promo != ''){
+				PM.getPromo(newData.promo,function (e,o) {
+					if (e!=null){
+						callback('promo-code-not-exists')
+						found = false
+					}
+				})
+			}
+			if(found){
+				saltAndHash(newData.pass, function(hash){
+					newData.pass = hash;
+				// append date stamp when record was created //
+					newData.date = moment().format('MMMM Do YYYY, h:mm:ss a');
+					accounts.insertOne(newData, callback);
+				});
+			}			
 		}
 	});
 }
-
+exports.updateMail = function(newData, callback)
+{
+	var o = {
+		email : data.email
+	}
+	accounts.findOneAndUpdate({_id:getObjectId(data.id)}, {$set:o}, {returnOriginal : false}, callback);
+}
 exports.updateAccount = function(newData, callback)
 {
 	let findOneAndUpdate = function(data){
 		var o = {
 			name : data.name,
+			lastName: data.lastName,
 			email : data.email,
-			country : data.country
+			promo : data.promo,
+			phone : data.phone,
+			country : data.country,
+			city : data.city,
+			street : data.street,
+			zipCode : data.zipCode
 		}
 		if (data.pass) o.pass = data.pass;
 		accounts.findOneAndUpdate({_id:getObjectId(data.id)}, {$set:o}, {returnOriginal : false}, callback);
 	}
-	if (newData.pass == ''){
-		findOneAndUpdate(newData);
-	}	else { 
-		saltAndHash(newData.pass, function(hash){
-			newData.pass = hash;
-			findOneAndUpdate(newData);
-		});
+	//TODO check promo
+	if(newData.promo != ''){
+		PM.getPromo(newData.promo,function (e,o) {
+			if (e!=null){
+				callback('promo-code-not-exists')
+				return
+			}
+		})
 	}
+	findOneAndUpdate(newData);
+}
+
+exports.updatePasswordRequest = function(id, oldPass, newPass, callback)
+{
+	accounts.findOne({_id:getObjectId(id)},function(e,res){
+		if(res){
+			validatePassword(oldPass,res.pass,function(e,result){
+				if(result){
+					saltAndHash(newPass, function(hash){
+						newData.pass = hash;
+						var o = {
+							pass: newPass
+						}
+						accounts.findOneAndUpdate({_id:getObjectId(data.id)}, {$set:o}, {returnOriginal : false}, callback);
+					});
+				}else{
+					callback('password-not-match')
+				}
+			})
+			
+		}else{
+			callback('error-getting-pass')
+		}
+		
+	})
+	
+	
 }
 
 exports.updatePassword = function(passKey, newPass, callback)
