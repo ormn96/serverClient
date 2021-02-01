@@ -48,6 +48,10 @@ module.exports = function(app) {
 		});
 	});
 
+	app.get('/getUser',function(req,res){
+		res.status(200).send(req.session.user)
+	})
+
 	app.post('/logout', function(req, res){
 		res.clearCookie('login');
 		req.session.destroy(function(e){ res.status(200).send('ok'); });
@@ -70,7 +74,7 @@ module.exports = function(app) {
 		}
 	});
 	
-	app.post('/home', function(req, res){
+	app.post('/update', function(req, res){
 		if (req.session.user == null){
 			res.redirect('/');
 		}	else{
@@ -79,7 +83,6 @@ module.exports = function(app) {
 				name	: req.body['name'],
 				lastName: req.body['lastName'],
 				email	: req.body['email'],
-				promo	: req.body['promo'],
 				phone	: req.body['phone'],
 				country	: req.body['country'],
 				city	: req.body['city'],
@@ -94,7 +97,7 @@ module.exports = function(app) {
 					res.status(200).send('ok');
 				}
 			});
-			if(req.body['email']){
+			if(req.body['email']!=req.session.user.email){
 				var data = {
 					id		: req.session.user._id,
 					name	: req.body['name'],
@@ -167,21 +170,34 @@ module.exports = function(app) {
 			pass	: req.body['pass'],
 			promo : req.body['promo']
 		}
-		PM.getPromo(req.body['promo'],function (e,o) {
-			if( e || o==null){
-				res.status(400).send('promo-not-found');
-			}else{
-				AM.checkMail(data.email,function(state){
-					if(state){
-						var base64 = urlCrypt.cryptObj(data);
-						EM.dispatchResistrationLink(data,'/addAccount/'+base64)
-						res.status(200).send('ok');
-					}else{
-						res.status(400).send('email-taken');
-					}
-				})
-			}
-		})
+		if(req.body['promo']){
+			PM.getPromo(req.body['promo'],function (e,o) {
+				if( e || o==null){
+					res.status(400).send('promo-not-found');
+				}else{
+					AM.checkMail(data.email,function(state){
+						if(state){
+							var base64 = urlCrypt.cryptObj(data);
+							EM.dispatchResistrationLink(data,'/addAccount/'+base64)
+							res.status(200).send('ok');
+						}else{
+							res.status(400).send('email-taken');
+						}
+					})
+				}
+			})
+		}else{
+			AM.checkMail(data.email,function(state){
+				if(state){
+					var base64 = urlCrypt.cryptObj(data);
+					EM.dispatchResistrationLink(data,'/addAccount/'+base64)
+					res.status(200).send('ok');
+				}else{
+					res.status(400).send('email-taken');
+				}
+			})
+		}
+		
 	});
 
 	app.get('/addAccount/:base64', function(req, res){
@@ -201,7 +217,7 @@ module.exports = function(app) {
 			}	else{
 				console.log("success\n"+data)
 				//TODO add sucess message
-				res.sendFile(path.join(__dirname,'/../../client/login.html'));
+				res.redirect('/');
 				
 			}
 		});

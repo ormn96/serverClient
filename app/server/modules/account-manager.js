@@ -166,15 +166,6 @@ exports.updateAccount = function(newData, callback)
 		if (data.pass) o.pass = data.pass;
 		accounts.findOneAndUpdate({_id:getObjectId(data.id)}, {$set:o}, {returnOriginal : false}, callback);
 	}
-	//TODO check promo
-	if(newData.promo != ''){
-		PM.getPromo(newData.promo,function (e,o) {
-			if (e!=null){
-				callback('promo-code-not-exists')
-				return
-			}
-		})
-	}
 	findOneAndUpdate(newData);
 }
 
@@ -185,11 +176,10 @@ exports.updatePasswordRequest = function(id, oldPass, newPass, callback)
 			validatePassword(oldPass,res.pass,function(e,result){
 				if(result){
 					saltAndHash(newPass, function(hash){
-						newData.pass = hash;
 						var o = {
-							pass: newPass
+							pass: hash
 						}
-						accounts.findOneAndUpdate({_id:getObjectId(data.id)}, {$set:o}, {returnOriginal : false}, callback);
+						accounts.findOneAndUpdate({_id:getObjectId(id)}, {$set:o}, {returnOriginal : false}, callback);
 					});
 				}else{
 					callback('password-not-match')
