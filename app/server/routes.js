@@ -322,6 +322,8 @@ module.exports = function(app) {
 	// 	});
 	// });
 	
-	app.get('*', function(req, res) { res.render('404', { title: 'Page Not Found'}); });
+	app.get('*', function(req, res) { 
+		res.redirect("/404.html")
+	 });
 
 };
