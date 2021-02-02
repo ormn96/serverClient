@@ -54,10 +54,10 @@ EM.dispatchResistrationLink = function(account,link, callback)
 }
 EM.composeEmailResister = function(o,link)
 {
-	let baseurl = process.env.NL_SITE_URL || 'http://localhost:3000';
+	let baseurl = process.env.NL_SITE_URL ;
 	var html = "<html><body>";
 		html += "Hi "+o.name+' '+o.lastName+",<br><br>";
-		html += "<a href='"+baseurl+link+"'>Click here to compleate your registration</a><br><br>";
+		html += "<a href='"+baseurl+link+"'>Click here to complete your registration</a><br><br>";
 		html += "Cheers,<br>";
 		html += "</body></html>";
 		return html
