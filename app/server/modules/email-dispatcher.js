@@ -32,7 +32,7 @@ EM.dispatchResetPasswordLink = function(account, callback)
 
 EM.composeResetPasswordEmail = function(o)
 {
-	let baseurl = process.env.NL_SITE_URL || 'http://localhost:3000';
+	let baseurl = "https://server-client-gody.herokuapp.com";
 	var html = "<html><body>";
 		html += "Hi "+o.name+' '+o.lastName+",<br><br>";
 		html += "<a href='"+baseurl+'/reset-password?key='+o.passKey+"'>Click here to reset your password</a><br><br>";
@@ -54,7 +54,7 @@ EM.dispatchResistrationLink = function(account,link, callback)
 }
 EM.composeEmailResister = function(o,link)
 {
-	let baseurl = process.env.NL_SITE_URL || 'http://localhost:3000';
+	let baseurl = "https://server-client-gody.herokuapp.com";
 	var html = "<html><body>";
 		html += "Hi "+o.name+' '+o.lastName+",<br><br>";
 		html += "<a href='"+baseurl+link+"'>Click here to complete your registration</a><br><br>";
@@ -76,7 +76,7 @@ EM.dispatchMailVerificationMail = function(account,link, callback)
 }
 EM.composeEmailMailVerification = function(o,link)
 {
-	let baseurl = process.env.NL_SITE_URL || 'http://localhost:3000';
+	let baseurl = "https://server-client-gody.herokuapp.com";
 	var html = "<html><body>";
 		html += "Hi "+o.name+' '+o.lastName+",<br><br>";
 		html += "<a href='"+baseurl+link+"'>Click here to verify your email</a><br><br>";
